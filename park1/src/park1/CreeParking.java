@@ -27,60 +27,108 @@ package park1;
 
 
 	public class CreeParking {
-	    static final int WIDTH = 35, HEIGHT = 20;
-	    static boolean[][] obstacles = new boolean[HEIGHT][WIDTH];
-	    //public static int i;
-	    //public static int j;
-	    List<Node> placesDisponibles = new LinkedList();
+	    JFrame frame;
+	    JTextField wid, hei, placesfich, obstaclesfich;
+	    GridCree panel;
+	    JPanel p;  
+	    JPanel nord;
+	    JPanel centerPanel;
+	    List<Node> placesDisponibles = new LinkedList<>();
+	    JScrollPane scrollPane;
+	    JButton sauvegarder;
+
 	    public static void main(String[] args) {
-	        // Exemple d'obstacles
-	    	   
-	    	 new CreeParking(); 
+	        new CreeParking(); 
 	    }
-	    
+
 	    public CreeParking() {
-	    	
-	    	
-	    	 SwingUtilities.invokeLater(() -> {
-	             JFrame frame = new JFrame("Robot Parking - Dijkstra");
-	             frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-	             frame.setLayout(new BorderLayout());
-	             //JPanel p = new JPanel();
-	             //p.setLayout(new GridLayout(1,2));
-	             JButton b1 = new JButton("choisir les obstacles");
-	             JButton b2 = new JButton("choisir places disponibles");
-	             
-	             //Node start = new Node(1, 4);
+	        SwingUtilities.invokeLater(() -> {
+	        	
+	            frame = new JFrame("Robot Parking - Dijkstra");
+	            frame.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
+	            frame.setLayout(new BorderLayout());
+
+	            JLabel labelplaces = new JLabel("Entrer fichier des places:");
+	            placesfich = new JTextField();
+	            JLabel labelobstacles = new JLabel("Entrer fichier des obstacles:");
+	            obstaclesfich = new JTextField();
+	            JLabel labelwidth = new JLabel("Entrer la largeur du parking:");
+	            wid = new JTextField();
+	            JLabel labelheight = new JLabel("Entrer la hauteur du parking:");
+	            hei = new JTextField();
+
+	            JPanel input = new JPanel(new GridLayout(4, 2, 5, 5));
+	            input.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
+	            input.add(labelplaces);
+	            input.add(placesfich);
+	            input.add(labelobstacles);
+	            input.add(obstaclesfich);
+	            input.add(labelwidth);
+	            input.add(wid);
+	            input.add(labelheight);
+	            input.add(hei);
+
+	            JButton appliquer = new JButton("Appliquer");
+	            JPanel appbutton = new JPanel();
+	            appbutton.add(appliquer);
+
+	            nord = new JPanel();
+	            nord.setLayout(new BoxLayout(nord, BoxLayout.Y_AXIS));
+	            nord.add(input);
+	            nord.add(appbutton);
+
+	            p = new JPanel();
 	            
-	             //Node start2 = new Node(29,8);
-	             //Node sorti = new Node(1,12);
-	             //List<Node> dest = List.of( new Node(29,8));
-	             //Node[] robotPosition = { new Node(4, 4) };
-	             JPanel p = new JPanel();
-	             GridCree panel = new GridCree(HEIGHT, WIDTH, obstacles, null, null, placesDisponibles);
-	             JButton saveButton = new JButton("Save");
-	             saveButton.addActionListener(e -> {
-	                 try {
-	                     saveToFile(panel);
-	                     JOptionPane.showMessageDialog(frame, "Fichiers sauvegardés avec succès !");
-	                 } catch (IOException ex) {
-	                     ex.printStackTrace();
-	                     JOptionPane.showMessageDialog(frame, "Erreur lors de la sauvegarde.");
-	                 }
-	             });
-	             p.add(saveButton); // ajoute le bouton dans le panneau bas
-	             frame.add(panel, BorderLayout.CENTER);
-	             frame.add(p,BorderLayout.SOUTH);
-	             frame.pack();
-	             frame.setLocationRelativeTo(null);
-	             frame.setVisible(true);
-	         });
-	    	 
+
+	            // Panel central qui va contenir le GridCree
+	            centerPanel = new JPanel(new BorderLayout());
+	            frame.add(centerPanel, BorderLayout.CENTER);
+	            
+	            appliquer.addActionListener(e -> updateGrid());
+
+	           
+	            
+	            frame.add(nord, BorderLayout.NORTH);
+	            
+	            frame.pack();
+	            frame.setLocationRelativeTo(null);
+	            frame.setVisible(true);
+	        });
 	    }
-	    
-	    public static void saveToFile(GridCree panel) throws IOException {
-	        // Sauvegarde des obstacles (format : x y x y ...)
-	        try (BufferedWriter writer = new BufferedWriter(new FileWriter("C:\\Users\\Asus\\eclipse-workspace\\park1\\src\\park1\\obstacles4.txt"))) {
+
+	    private void updateGrid() {
+	        try {
+	            int width = Integer.parseInt(wid.getText());
+	            int height = Integer.parseInt(hei.getText());
+
+	            boolean[][] obstacles = new boolean[height][width];
+	            placesDisponibles.clear();
+
+	            if (scrollPane != null) {
+	                centerPanel.remove(scrollPane);
+	            }
+	            sauvegarder = new JButton("Sauvegarder");
+	            JPanel sud = new JPanel();
+	            sud.add(sauvegarder);
+	            panel = new GridCree(height, width, obstacles, null, null, placesDisponibles);
+
+	            scrollPane = new JScrollPane(panel); // ajout du scroll
+	            scrollPane.setPreferredSize(new Dimension(800, 600)); // taille de la vue visible
+	            scrollPane.getVerticalScrollBar().setUnitIncrement(16); // vitesse de scroll
+	            scrollPane.getHorizontalScrollBar().setUnitIncrement(16);
+
+	            centerPanel.add(scrollPane, BorderLayout.CENTER);
+	            centerPanel.revalidate();
+	            centerPanel.repaint();
+	            frame.add(sud,BorderLayout.SOUTH);
+	            frame.pack();
+	        } catch (NumberFormatException ex) {
+	            JOptionPane.showMessageDialog(frame, "Veuillez entrer des nombres valides pour la largeur et la hauteur.");
+	        }
+	    }
+
+	    public static void saveToFile(GridCree panel, String placesfichier, String obstaclesfichier) throws IOException {
+	        try (BufferedWriter writer = new BufferedWriter(new FileWriter(obstaclesfichier))) {
 	            boolean[][] obstacles = panel.getObstacles();
 	            StringBuilder sb = new StringBuilder();
 	            for (int y = 0; y < obstacles.length; y++) {
@@ -90,11 +138,10 @@ package park1;
 	                    }
 	                }
 	            }
-	            writer.write(sb.toString().trim()); // trim pour supprimer l'espace final
+	            writer.write(sb.toString().trim());
 	        }
 
-	        // Sauvegarde des places disponibles (format : x y disponibilite x y disponibilite ...)
-	        try (BufferedWriter writer = new BufferedWriter(new FileWriter("C:\\Users\\Asus\\eclipse-workspace\\park1\\src\\park1\\places4.txt"))) {
+	        try (BufferedWriter writer = new BufferedWriter(new FileWriter(placesfichier))) {
 	            List<Node> places = panel.getPlacesDisponibles();
 	            StringBuilder sb = new StringBuilder();
 	            for (Node n : places) {
@@ -103,9 +150,4 @@ package park1;
 	            writer.write(sb.toString().trim());
 	        }
 	    }
-	    
-
-	  
-	    
-
-}
+	}
