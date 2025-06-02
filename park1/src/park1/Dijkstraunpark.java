@@ -20,13 +20,13 @@ import java.sql.*;
 
 
 public class Dijkstraunpark {
-    static final int WIDTH = 85, HEIGHT = 38;
+    static final int WIDTH = 30, HEIGHT = 13;
     static boolean[][] obstacles = new boolean[HEIGHT][WIDTH];
     //public static int i;
     //public static int j;
     List<Node> placesDisponibles = new LinkedList();
-    static String cheminFichier = "/Users/Asus/eclipse-workspace/park1/src/park1/places4.txt";
-    static String fichierObstacles = "/Users/Asus/eclipse-workspace/park1/src/park1/obstacles4.txt";
+    static String cheminFichier = "/Users/Asus/eclipse-workspace/park1/src/park1/node.txt";
+    static String fichierObstacles = "/Users/Asus/eclipse-workspace/park1/src/park1/obstacles.txt";
     public static void main(String[] args) {
         // Exemple d'obstacles
     	   
@@ -60,11 +60,11 @@ public class Dijkstraunpark {
              JPanel p = new JPanel();
              p.setLayout(new GridLayout(1,2));
              
-             Node start = new Node(59, 37);
+             Node start = new Node(28, 12);
              //Node start2 = new Node(29,8);
-             Node sorti = new Node(57,37);
+             Node sorti = new Node(1,12);
              //List<Node> dest = List.of( new Node(29,8));
-             Node[] robotPosition = { new Node(59, 37) };
+             Node[] robotPosition = { new Node(28, 12) };
              
              GridPanel panel = new GridPanel(HEIGHT, WIDTH, obstacles, null, robotPosition[0], null, placesDisponibles, start);
             
@@ -79,7 +79,7 @@ public class Dijkstraunpark {
             	//dest.getFirst().disponibilite=0;
             	 //try { Thread.sleep(4000); } catch (InterruptedException ex) {}
          		//executerDijkstraAvecAnimation2(start2, sorti, obstacles, panel);
-         		String url = "jdbc:mysql://localhost:3306/base2";
+         		String url = "jdbc:mysql://localhost:3306/base";
                 String user = "root";
                 String password = "";
 
@@ -485,7 +485,7 @@ public class Dijkstraunpark {
         	int c = scanner1.nextInt();
        	 	int d = scanner1.nextInt();
        	 	
-       	 obstacles[d][c] = true;
+       	 obstacles[c][d] = true;
         }
         
         scanner1.close();
