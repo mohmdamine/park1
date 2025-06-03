@@ -1,153 +1,230 @@
 package park1;
 
+import javax.swing.*;
+import java.util.*;
+import java.util.List;
 
-	import javax.swing.*;
-	import java.util.*;
-	import java.util.List;
-
-	import javax.swing.Timer;
-
-
-	import java.awt.*;
-	import java.awt.event.*;
-	import java.io.BufferedReader;
-	import java.io.BufferedWriter;
-	import java.io.File;
-	import java.io.FileNotFoundException;
-	import java.io.FileReader;
-	import java.io.FileWriter;
-	import java.io.IOException;
-	import java.sql.Connection;
-	import java.sql.DriverManager;
-	import java.sql.PreparedStatement;
-	import java.sql.ResultSet;
-	import java.sql.SQLException;
-	import java.sql.Statement;
-	import java.sql.Time;
+import javax.swing.Timer;
 
 
-	public class CreeParking {
-	    JFrame frame;
-	    JTextField wid, hei, placesfich, obstaclesfich;
-	    GridCree panel;
-	    JPanel p;  
-	    JPanel nord;
-	    JPanel centerPanel;
-	    List<Node> placesDisponibles = new LinkedList<>();
-	    JScrollPane scrollPane;
-	    JButton sauvegarder;
+import java.awt.*;
+import java.awt.event.*;
+import java.io.BufferedReader;
+import java.io.BufferedWriter;
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileReader;
+import java.io.FileWriter;
+import java.io.IOException;
+import java.sql.*;
 
-	    public static void main(String[] args) {
-	        new CreeParking(); 
-	    }
 
-	    public CreeParking() {
-	        SwingUtilities.invokeLater(() -> {
-	        	
-	            frame = new JFrame("Robot Parking - Dijkstra");
-	            frame.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
-	            frame.setLayout(new BorderLayout());
+public class Dijkstracheck {
+    static final int WIDTH = 30, HEIGHT = 13;
+    static boolean[][] obstacles = new boolean[HEIGHT][WIDTH];
+    List<Node> placesDisponibles = new LinkedList();
+    static String cheminFichier = "/Users/Asus/eclipse-workspace/park1/src/park1/node.txt";
+    static String fichierObstacles = "/Users/Asus/eclipse-workspace/park1/src/park1/obstacles.txt";
+    public static void main(String[] args) {
+        // Exemple d'obstacles
+    	   
+    	 new Dijkstracheck(); 
+    }
+    
+    public Dijkstracheck() {
+    	
+    	
+    	List<Node> placesDisponibles = chargerPlacesDepuisFichier(cheminFichier);
+    	
+    	try {
+            chargerDepuisFichiernode(cheminFichier);
+        } catch (FileNotFoundException e) {
+            JOptionPane.showMessageDialog(null, "Fichier introuvable !");
+            e.printStackTrace();
+        }
+    	
+    	try {
+    		chargerDepuisFichierobstacles(fichierObstacles);
+        } catch (FileNotFoundException e) {
+            JOptionPane.showMessageDialog(null, "Fichier introuvable !");
+            e.printStackTrace();
+        }
+    	
+    	 SwingUtilities.invokeLater(() -> {
+             JFrame frame = new JFrame("Check");
+             frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+             frame.setLayout(new BorderLayout());
+             //JPanel p = new JPanel();
+             //p.setLayout(new GridLayout(1,2));
+             
+             Node start = new Node(28, 12);
+             //Node start2 = new Node(29,8);
+             Node sorti = new Node(1,12);
+             //List<Node> dest = List.of( new Node(29,8));
+             Node[] robotPosition = { new Node(28, 12) };
+             
+             GridPanel panel = new GridPanel(HEIGHT, WIDTH, obstacles, null, robotPosition[0], null, placesDisponibles, start);
+            
+             frame.add(panel, BorderLayout.CENTER);
 
-	            JLabel labelplaces = new JLabel("Entrer fichier des places:");
-	            placesfich = new JTextField();
-	            JLabel labelobstacles = new JLabel("Entrer fichier des obstacles:");
-	            obstaclesfich = new JTextField();
-	            JLabel labelwidth = new JLabel("Entrer la largeur du parking:");
-	            wid = new JTextField();
-	            JLabel labelheight = new JLabel("Entrer la hauteur du parking:");
-	            hei = new JTextField();
+             frame.pack();
+             frame.setLocationRelativeTo(null);
+             frame.setVisible(false);
+         });
+    	 
+    }
+    public static Node trouverPlaceLaPlusProche(Node start, List<Node> places) {
+        Node meilleure = null;
+        int meilleurCout = Integer.MAX_VALUE;
+        for (Node goal : places) {
+        	if (goal.disponibilite == 0) {
+        		List<Node> chemin = dijkstra(start, goal, places);
+        		if (!chemin.isEmpty() && chemin.size() < meilleurCout) {
+        			meilleurCout = chemin.size();
+        			meilleure = goal;
+        			
+        		}
+        		
+        	}else {
+        		System.out.println("pas assez de places");
+        	}
+        	
+        }
+        if (meilleure != null) {
+            meilleure.disponibilite = 1;
+            
+            
+         
+        }
+        return meilleure;
+        
+    }
+    
 
-	            JPanel input = new JPanel(new GridLayout(4, 2, 5, 5));
-	            input.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
-	            input.add(labelplaces);
-	            input.add(placesfich);
-	            input.add(labelobstacles);
-	            input.add(obstaclesfich);
-	            input.add(labelwidth);
-	            input.add(wid);
-	            input.add(labelheight);
-	            input.add(hei);
+    
+   public static boolean estUnePlaceDeParking(int x, int y, List<Node> placesDisponibles) {
+        for (Node p : placesDisponibles) {
+            if (p.x == x && p.y == y) return true;
+        }
+        return false;
+    }
 
-	            JButton appliquer = new JButton("Appliquer");
-	            JPanel appbutton = new JPanel();
-	            appbutton.add(appliquer);
+   public static List<Node> dijkstra(Node start, Node goal, List<Node> placesDisponibles) {
+        int rows = obstacles.length;
+        int cols = obstacles[0].length;
+        int[][] distances = new int[rows][cols];
+        Node[][] previous = new Node[rows][cols];
+        boolean[][] visited = new boolean[rows][cols];
 
-	            nord = new JPanel();
-	            nord.setLayout(new BoxLayout(nord, BoxLayout.Y_AXIS));
-	            nord.add(input);
-	            nord.add(appbutton);
+        for (int[] row : distances) Arrays.fill(row, Integer.MAX_VALUE);
+        distances[start.y][start.x] = 0;
 
-	            p = new JPanel();
-	            
+        class PointAvecDistance {
+            int x, y, dist;
 
-	            // Panel central qui va contenir le GridCree
-	            centerPanel = new JPanel(new BorderLayout());
-	            frame.add(centerPanel, BorderLayout.CENTER);
-	            
-	            appliquer.addActionListener(e -> updateGrid());
+            PointAvecDistance(int x, int y, int dist) {
+                this.x = x;
+                this.y = y;
+                this.dist = dist;
+            }
+        }
 
-	           
-	            
-	            frame.add(nord, BorderLayout.NORTH);
-	            
-	            frame.pack();
-	            frame.setLocationRelativeTo(null);
-	            frame.setVisible(true);
-	        });
-	    }
+        PriorityQueue<PointAvecDistance> queue = new PriorityQueue<>(Comparator.comparingInt(n -> n.dist));
+        queue.add(new PointAvecDistance(start.x, start.y, 0));
 
-	    private void updateGrid() {
-	        try {
-	            int width = Integer.parseInt(wid.getText());
-	            int height = Integer.parseInt(hei.getText());
+        int[][] dirs = {{0,1},{1,0},{0,-1},{-1,0}};
 
-	            boolean[][] obstacles = new boolean[height][width];
-	            placesDisponibles.clear();
+        while (!queue.isEmpty()) {
+            PointAvecDistance current = queue.poll();
+            if (visited[current.y][current.x]) continue;
+            visited[current.y][current.x] = true;
+            if (current.x == goal.x && current.y == goal.y) break;
 
-	            if (scrollPane != null) {
-	                centerPanel.remove(scrollPane);
-	            }
-	            sauvegarder = new JButton("Sauvegarder");
-	            JPanel sud = new JPanel();
-	            sud.add(sauvegarder);
-	            panel = new GridCree(height, width, obstacles, null, null, placesDisponibles);
+            for (int[] d : dirs) {
+                int nx = current.x + d[0], ny = current.y + d[1];
+                if (nx >= 0 && ny >= 0 && nx < cols && ny < rows 
+                    && !obstacles[ny][nx] 
+                    && (!estUnePlaceDeParking(nx, ny, placesDisponibles) || (nx == goal.x && ny == goal.y))) {
+                    
+                    int newDist = distances[current.y][current.x] + 1;
+                    if (newDist < distances[ny][nx]) {
+                        distances[ny][nx] = newDist;
+                        previous[ny][nx] = new Node(current.x, current.y); // ou conserver une seule instance
+                        queue.add(new PointAvecDistance(nx, ny, newDist));
+                    }
+                }
+            }
+        }
 
-	            scrollPane = new JScrollPane(panel); // ajout du scroll
-	            scrollPane.setPreferredSize(new Dimension(800, 600)); // taille de la vue visible
-	            scrollPane.getVerticalScrollBar().setUnitIncrement(16); // vitesse de scroll
-	            scrollPane.getHorizontalScrollBar().setUnitIncrement(16);
+        List<Node> path = new ArrayList<>();
+        Node step = goal;
+        while (step != null && !(step.x == start.x && step.y == start.y)) {
+            path.add(0, step);
+            step = previous[step.y][step.x];
+        }
+        if (step != null) path.add(0, start);
+        return path;
+    }
+    public static List<Node> chargerPlacesDepuisFichier(String cheminFichier) {
+        List<Node> places = new ArrayList<>();
+        try (Scanner scanner = new Scanner(new File(cheminFichier))) {
+            while (scanner.hasNextInt()) {
+                int x = scanner.nextInt();
+                int y = scanner.nextInt();
+                int dispo = scanner.nextInt();
+                Node node = new Node(x, y);
+                node.disponibilite = dispo;
+                places.add(node);
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        return places;
+    }
+    
+    public void chargerDepuisFichiernode(String cheminFichier) throws FileNotFoundException {
+    	File file = new File(cheminFichier);
+        Scanner scanner = new Scanner(file);
 
-	            centerPanel.add(scrollPane, BorderLayout.CENTER);
-	            centerPanel.revalidate();
-	            centerPanel.repaint();
-	            frame.add(sud,BorderLayout.SOUTH);
-	            frame.pack();
-	        } catch (NumberFormatException ex) {
-	            JOptionPane.showMessageDialog(frame, "Veuillez entrer des nombres valides pour la largeur et la hauteur.");
-	        }
-	    }
+        while (scanner.hasNextInt()) {
+            if (scanner.hasNextInt()) {
+                int a = scanner.nextInt();
+                if (scanner.hasNextInt()) {
+                    int b = scanner.nextInt();
+                    if (scanner.hasNextInt()) {
+                        int c = scanner.nextInt();
+                        
+                        Node t = new Node(a, b);
+                        t.disponibilite = c;
+                        placesDisponibles.add(t);
+                    } else {
+                        System.err.println("Erreur: valeur manquante pour la disponibilité.");
+                        break;
+                    }
+                } else {
+                    System.err.println("Erreur: valeur manquante pour y.");
+                    break;
+                }
+            } else {
+                System.err.println("Erreur: valeur manquante pour x.");
+                break;
+            }
+        }
+        
+        scanner.close();
+    }
+    public void chargerDepuisFichierobstacles(String cheminFichier) throws FileNotFoundException {
+    	File files = new File(fichierObstacles);
+        Scanner scanner1 = new Scanner(files);
 
-	    public static void saveToFile(GridCree panel, String placesfichier, String obstaclesfichier) throws IOException {
-	        try (BufferedWriter writer = new BufferedWriter(new FileWriter(obstaclesfichier))) {
-	            boolean[][] obstacles = panel.getObstacles();
-	            StringBuilder sb = new StringBuilder();
-	            for (int y = 0; y < obstacles.length; y++) {
-	                for (int x = 0; x < obstacles[0].length; x++) {
-	                    if (obstacles[y][x]) {
-	                        sb.append(x).append(" ").append(y).append(" ");
-	                    }
-	                }
-	            }
-	            writer.write(sb.toString().trim());
-	        }
+        while (scanner1.hasNextLine()) {
+        	int c = scanner1.nextInt();
+       	 	int d = scanner1.nextInt();
+       	 	
+       	 obstacles[c][d] = true;
+        }
+        
+        scanner1.close();
+    }
 
-	        try (BufferedWriter writer = new BufferedWriter(new FileWriter(placesfichier))) {
-	            List<Node> places = panel.getPlacesDisponibles();
-	            StringBuilder sb = new StringBuilder();
-	            for (Node n : places) {
-	                sb.append(n.x).append(" ").append(n.y).append(" ").append(n.disponibilite).append(" ");
-	            }
-	            writer.write(sb.toString().trim());
-	        }
-	    }
-	}
+}
