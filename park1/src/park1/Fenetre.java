@@ -15,6 +15,7 @@ public class Fenetre extends JFrame {
     JButton b;
     JButton b2;
     JButton b3;
+    JButton b4;
     public int mat;
 
     public Fenetre() {
@@ -22,12 +23,14 @@ public class Fenetre extends JFrame {
         b = new JButton("PARK");
         b2 = new JButton("UNPARK");
         b3 = new JButton("voir parking");
+        b4 = new JButton("creer parking");
         JPanel p = new JPanel();
         p.setBorder(BorderFactory.createEmptyBorder(140, 140, 140, 140));
-        p.setLayout(new GridLayout(3, 1, 40, 40));
+        p.setLayout(new GridLayout(4, 1, 40, 40));
         p.add(b);
         p.add(b2);
         p.add(b3);
+        p.add(b4);
         add(p);
 
         b.addActionListener(new ActionListener() {
@@ -36,7 +39,7 @@ public class Fenetre extends JFrame {
                
                 Dijkstracheck dij1 = new Dijkstracheck();
                 
-                Node i = dij1.trouverPlaceLaPlusProche(new Node(59, 37), dij1.chargerPlacesDepuisFichier("/Users/Asus/eclipse-workspace/park1/src/park1/places4.txt"));
+                Node i = dij1.trouverPlaceLaPlusProche(new Node(28, 12), dij1.chargerPlacesDepuisFichier("/Users/Asus/eclipse-workspace/park1/src/park1/node.txt"));
                 if (i==null) {
                 	JOptionPane.showMessageDialog(null, "parking plein","attention",JOptionPane.ERROR_MESSAGE);
                 }else 
@@ -57,6 +60,15 @@ public class Fenetre extends JFrame {
 			public void actionPerformed(ActionEvent e) {
 				// TODO Auto-generated method stub
 				new DijkstraParking();
+			}
+        	
+        });
+        b4.addActionListener(new ActionListener() {
+
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				// TODO Auto-generated method stub
+				new CreeParking();
 			}
         	
         });
@@ -126,13 +138,10 @@ public class Fenetre extends JFrame {
         b1.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                // Code pour la gestion du DijkstraParking (tu peux adapter ce code si nécessaire)
+                // Code pour la gestion du DijkstraParking
                 Dijkstrapark dij = new Dijkstrapark();
-               // Node i = dij.trouverPlaceLaPlusProche(new Node(28, 12), dij.chargerPlacesDepuisFichier("/Users/Asus/eclipse-workspace/park1/src/park1/node.txt"));
                 Time time = Time.valueOf(heureFormatee);
-                //int a = dij.getI();
-                //int b = dij.getJ();
-                String url = "jdbc:mysql://localhost:3306/base2";
+                String url = "jdbc:mysql://localhost:3306/base";
                 String user = "root";
                 String password = "";
 
@@ -153,7 +162,7 @@ public class Fenetre extends JFrame {
         });
 
         cod.setVisible(true);
-        cod.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);  // Utilisation de DISPOSE_ON_CLOSE pour fermer uniquement cette fenêtre
+        cod.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
         cod.setSize(300, 200);
     }
     
@@ -191,7 +200,7 @@ public class Fenetre extends JFrame {
     				String pswd = code.getText();
     				int pwd=Integer.parseInt(pswd);
     				System.out.println("code de sortir saisi : " + pswd);
-    				   String url = "jdbc:mysql://localhost:3306/base2";
+    				   String url = "jdbc:mysql://localhost:3306/base";
     		            String user = "root";
     		            String password = "";
 
@@ -230,14 +239,13 @@ public class Fenetre extends JFrame {
         paie.setTitle("paiement");
         
         LinkedList l = new LinkedList();
-        //text = new JLabel("montant a payer:");
     	
     		LocalTime heure = LocalTime.now();
             DateTimeFormatter formatter = DateTimeFormatter.ofPattern("HH:mm:ss");
             String heureSortir = heure.format(formatter);
             Time hs = Time.valueOf(heureSortir);
            	        
-            String url = "jdbc:mysql://localhost:3306/base2";
+            String url = "jdbc:mysql://localhost:3306/base";
             String user = "root";
             String password = "";
 
@@ -291,17 +299,12 @@ public class Fenetre extends JFrame {
     			@Override
     			public void actionPerformed(ActionEvent e) {
     				
-                    // Code pour la gestion du DijkstraParking (tu peux adapter ce code si nécessaire)
+                    // Code pour la gestion du DijkstraParking
                     Dijkstraunpark dij1 = new Dijkstraunpark();
                    
-                    /*String url = "jdbc:mysql://localhost:3306/base";
-                    String user = "root";
-                    String password = "";*/
-
-                    
                         // Connexion à la base de données
                         
-                        String url = "jdbc:mysql://localhost:3306/base2";
+                        String url = "jdbc:mysql://localhost:3306/base";
                         String user = "root";
                         String password = "";
 
@@ -318,18 +321,8 @@ public class Fenetre extends JFrame {
                         } catch (SQLException l) {
                             l.printStackTrace();
                         }
-
-                        // Requête SQL pour insérer un nouvel enregistrement
-                       //ici
     			}
     			});
             
     		}
     }
-    		
-    
-
-
-
-
-
